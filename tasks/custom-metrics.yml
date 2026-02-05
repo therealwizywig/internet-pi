@@ -1,0 +1,11 @@
+---
+# TODO: Add credential json to the environment
+- name: Create custom-metrics directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    force: true
+  loop:
+    - "{{ config_dir }}/custom-metrics"
+    - "{{ config_dir }}/custom-metrics/config"

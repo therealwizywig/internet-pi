@@ -1,0 +1,80 @@
+---
+- name: Configure Internet Pi.
+  hosts: internet_pi
+  become: true
+
+  pre_tasks:
+    - name: Ignore PEP 668 because it's silly.
+      ansible.builtin.file:
+        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+        state: absent
+
+    - name: Load configuration (with defaults from example file).
+      ansible.builtin.include_vars: "{{ item }}"
+      loop:
+        - example.config.yml
+        - config.yml
+
+    - name: Ensure apt cache is up to date.
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when:
+        - ansible_facts.os_family == "Debian"
+
+    - name: Ensure pacman cache is up to date
+      community.general.pacman:
+        update_cache: true
+      when:
+        - ansible_facts.os_family == "Archlinux"
+
+    - name: Install yq for config merging.
+      ansible.builtin.apt:
+        name: yq
+        state: present
+      when:
+        - ansible_facts.os_family == "Debian"
+
+  handlers:
+    - name: Include handlers.
+      ansible.builtin.import_tasks: tasks/handlers.yml
+
+  tasks:
+    - name: Setup User.
+      ansible.builtin.import_tasks: tasks/user.yml
+
+    - name: Configure DNS.
+      ansible.builtin.import_tasks: tasks/dns.yml
+
+    - name: Setup Docker.
+      ansible.builtin.import_tasks: tasks/docker.yml
+
+    - name: Set up Internet Monitoring.
+      ansible.builtin.import_tasks: tasks/internet-monitoring.yml
+      when: monitoring_enable
+
+    - name: Set up Custom Metrics.
+      ansible.builtin.import_tasks: tasks/custom-metrics.yml
+      when: custom_metrics_enable
+
+    - name: Set up Pi Hole.
+      ansible.builtin.import_tasks: tasks/pi-hole.yml
+      when: pihole_enable
+
+    - name: Set up Shelly Plug Monitoring.
+      ansible.builtin.import_tasks: tasks/shelly-plug.yml
+      when: shelly_plug_enable
+
+    - name: Set up Air Gradient Monitoring.
+      ansible.builtin.import_tasks: tasks/airgradient.yml
+      when: airgradient_enable
+
+    - name: Set up Starlink Monitoring.
+      ansible.builtin.import_tasks: tasks/starlink.yml
+      when: starlink_enable
+
+    - name: Set up updater service
+      ansible.builtin.import_tasks: tasks/updater.yml
+
+    - name: Check all containers are stable
+      ansible.builtin.import_tasks: tasks/check-containers.yml
