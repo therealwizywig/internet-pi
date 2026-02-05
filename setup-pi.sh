@@ -5,7 +5,7 @@ set -e
 
 # Configuration
 REPO_OWNER="therealwizywig"
-REPO_NAME="internet_pi"
+REPO_NAME="internet-pi"
 BRANCH="master"
 INSTALL_DIR="/scry-pi"
 BACKUP_DIR="$INSTALL_DIR.backup"
